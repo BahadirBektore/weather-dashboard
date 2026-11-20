@@ -1,0 +1,264 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather Dashboard</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="dark-theme">
+
+  <div class="app-container">
+
+    <!-- Header -->
+    
+    <header class="header">
+
+     <button id="theme-toggle" class="theme-toggle">
+    🌙 Dark Mode
+     </button>
+
+      <h1>Weather Dashboard</h1>
+      <p>Weather information at a glance</p>
+
+    </header>
+
+
+    <main class="main-content">
+
+      <!-- Search Section -->
+      <section class="search-section">
+        <form action="/weather" method="GET">
+          <input
+            type="text"
+            name="city"
+            placeholder="Enter a city"
+            value="<%= typeof searchedCity !== 'undefined' ? searchedCity : (location ? location.name : '') %>"
+            required
+          >
+          <button type="submit">Search</button>
+        </form>
+      </section>
+
+      <% if (typeof errorMessage !== "undefined" && errorMessage) { %>
+        <div class="error-message">
+         <p>⚠️ <%= errorMessage %></p>
+        </div>
+      <% } %>
+
+      <% if (location && weather) { %>
+
+        <!-- Current Weather -->
+        
+<section class="current-weather">
+
+  <div class="weather-main">
+
+    <div class="weather-location">
+      <h2><%= location.name %>, <%= location.country %></h2>
+      <p>Current Weather</p>
+    </div>
+
+    <div class="weather-temperature">
+      <span class="temperature-value">
+        <%= Math.round(weather.current.temperature_2m) %>°
+      </span>
+
+      <div class="temperature-details">
+        <div class="current-weather-icon">
+          <%= getWeatherIcon(weather.current.weather_code) %>
+        </div>
+        <p><%= weatherDescription %></p>
+        <p>
+          Feels like
+          <%= Math.round(weather.current.apparent_temperature) %>°C
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="weather-details">
+
+    <div class="weather-detail-card">
+      <span>💧</span>
+      <p>Humidity</p>
+      <h3><%= weather.current.relative_humidity_2m %>%</h3>
+    </div>
+
+    <div class="weather-detail-card">
+      <span>💨</span>
+      <p>Wind Speed</p>
+      <h3><%= weather.current.wind_speed_10m %> km/h</h3>
+    </div>
+
+    <div class="weather-detail-card">
+      <span>🌅</span>
+      <p>Sunrise</p>
+      <h3><%= weather.daily.sunrise[0].split("T")[1] %></h3>
+    </div>
+
+    <div class="weather-detail-card">
+      <span>🌇</span>
+      <p>Sunset</p>
+      <h3><%= weather.daily.sunset[0].split("T")[1] %></h3>
+    </div>
+
+  </div>
+
+</section>
+
+
+        <!-- Hourly Forecast -->
+        <section class="forecast-section">
+
+          <h3>Hourly Forecast</h3>
+
+          <p class="timezone-label">
+            Local time: <%= weather.timezone %>
+          </p>
+
+          
+<div class="hourly-container">
+
+  <% for (let i = 0; i < 24; i++) { %>
+
+    <div class="hourly-card">
+
+      <p class="hourly-time">
+        <%= weather.hourly.time[i].split("T")[1] %>
+      </p>
+
+      <div class="hourly-icon">
+        <%= getWeatherIcon(weather.hourly.weather_code[i]) %>
+      </div>
+
+      <h3 class="hourly-temperature">
+        <%= Math.round(weather.hourly.temperature_2m[i]) %>°
+      </h3>
+
+      <p class="hourly-description">
+        <%= getWeatherDescription(weather.hourly.weather_code[i]) %>
+      </p>
+
+      <div class="hourly-rain">
+        💧 <%= weather.hourly.precipitation_probability[i] %>%
+      </div>
+
+    </div>
+
+  <% } %>
+
+</div>
+
+
+        </section>
+
+        <!-- 7-Day Forecast -->
+        <section class="forecast-section">
+
+          <h3>7-Day Forecast</h3>
+
+          <div class="daily-grid">
+
+  <% for (let i = 0; i < weather.daily.time.length; i++) { %>
+
+    <div class="daily-card">
+
+      <h4 class="daily-date">
+        <%= new Date(weather.daily.time[i] + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" }) %>
+      </h4>
+
+      <div class="daily-icon">
+        <%= getWeatherIcon(weather.daily.weather_code[i]) %>
+      </div>
+
+      <p class="daily-description">
+        <%= getWeatherDescription(weather.daily.weather_code[i]) %>
+      </p>
+
+      <div class="daily-temperatures">
+        <span class="daily-max">
+          <%= Math.round(weather.daily.temperature_2m_max[i]) %>°
+        </span>
+
+        <span class="daily-min">
+          <%= Math.round(weather.daily.temperature_2m_min[i]) %>°
+        </span>
+      </div>
+
+      <div class="daily-sun">
+        <p>🌅 <%= weather.daily.sunrise[i].split("T")[1] %></p>
+        <p>🌇 <%= weather.daily.sunset[i].split("T")[1] %></p>
+      </div>
+
+    </div>
+
+  <% } %>
+
+</div>
+
+        </section>
+
+      <% } %>
+
+    </main>
+    
+    
+    <footer class="footer">
+     <p>
+       Weather data by
+       <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">
+         Open-Meteo
+       </a>
+      </p>
+    </footer>
+
+
+  </div>
+
+
+
+<script>
+  const themeToggle = document.getElementById("theme-toggle");
+
+  // Load saved theme
+  const savedTheme = localStorage.getItem("theme");
+
+  if (savedTheme) {
+    document.body.classList.add(savedTheme);
+  } else {
+    document.body.classList.add("dark-theme");
+  }
+
+  // Update button text
+  function updateThemeButton() {
+    if (document.body.classList.contains("dark-theme")) {
+      themeToggle.textContent = "☀️ Light Mode";
+    } else {
+      themeToggle.textContent = "🌙 Dark Mode";
+    }
+  }
+
+  updateThemeButton();
+
+  // Toggle theme
+  themeToggle.addEventListener("click", () => {
+
+    if (document.body.classList.contains("dark-theme")) {
+      document.body.classList.replace("dark-theme", "light-theme");
+      localStorage.setItem("theme", "light-theme");
+    } else {
+      document.body.classList.replace("light-theme", "dark-theme");
+      localStorage.setItem("theme", "dark-theme");
+    }
+
+    updateThemeButton();
+
+  });
+</script>
+
+</body>
+</html>
